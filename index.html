@@ -2,253 +2,230 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Sana Material World</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sana Puzzle Game</title>
 <style>
-
 body{
-  margin:0;
-  font-family:"Yu Gothic",sans-serif;
-  background:linear-gradient(#fff6fb,#f0f8ff);
+ margin:0;
+ font-family:"Yu Gothic",sans-serif;
+ background:linear-gradient(#ffe8f5,#e8f4ff);
+ display:flex;
+ flex-direction:column;
+ align-items:center;
 }
 
 header{
-  background:#ff8fcf;
-  color:white;
-  padding:15px 25px;
-  font-size:24px;
-  font-weight:bold;
+ font-size:24px;
+ font-weight:bold;
+ padding:15px;
+ color:#ff5fb2;
 }
 
-.topbar{
-  display:flex;
-  gap:10px;
-  padding:10px 20px;
-  background:white;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+#scoreBoard{
+ font-size:18px;
+ margin-bottom:10px;
 }
 
-input{
-  flex:1;
-  padding:10px;
-  border-radius:20px;
-  border:1px solid #ddd;
+#game{
+ display:grid;
+ grid-template-columns:repeat(6,50px);
+ grid-gap:6px;
+ background:white;
+ padding:10px;
+ border-radius:15px;
+ box-shadow:0 6px 15px rgba(0,0,0,0.15);
+}
+
+.cell{
+ width:50px;
+ height:50px;
+ border-radius:10px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:24px;
+ cursor:pointer;
+ user-select:none;
+ transition:transform .1s;
+}
+
+.cell:active{
+ transform:scale(0.9);
+}
+
+#controls{
+ margin-top:15px;
 }
 
 button{
-  padding:10px 16px;
-  border:none;
-  border-radius:20px;
-  background:#ff8fcf;
-  color:white;
-  cursor:pointer;
+ padding:10px 18px;
+ border:none;
+ border-radius:20px;
+ background:#ff7fcb;
+ color:white;
+ font-size:14px;
+ cursor:pointer;
 }
 
-.container{
-  display:grid;
-  grid-template-columns:200px 1fr;
-  gap:20px;
-  padding:20px;
-}
-
-.sidebar{
-  background:white;
-  border-radius:12px;
-  padding:15px;
-  height:fit-content;
-  box-shadow:0 4px 12px rgba(0,0,0,0.1);
-}
-
-.sidebar h3{
-  margin-top:0;
-}
-
-.category{
-  padding:8px;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-.category:hover{
-  background:#ffe6f4;
-}
-
-.gallery{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-  gap:15px;
-}
-
-.card{
-  background:white;
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 5px 12px rgba(0,0,0,0.1);
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.card:hover{
-  transform:scale(1.05);
-}
-
-.thumb{
-  height:120px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:40px;
-  background:#ffe6f4;
-}
-
-.title{
-  padding:10px;
-  font-size:14px;
-  text-align:center;
-}
-
-.modal{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.5);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-
-.modal-content{
-  background:white;
-  padding:30px;
-  border-radius:15px;
-  text-align:center;
-  max-width:400px;
-}
-
-.big{
-  font-size:80px;
-}
-
-.close{
-  margin-top:20px;
+#message{
+ margin-top:10px;
+ font-size:16px;
 }
 
 footer{
-  text-align:center;
-  padding:20px;
-  font-size:14px;
-  color:#666;
+ margin-top:20px;
+ font-size:12px;
+ color:#666;
 }
-
 </style>
 </head>
 
 <body>
 
-<header>
-🎨 Sana 素材サイト
-</header>
+<header>🧩 Sana Puzzle</header>
 
-<div class="topbar">
-<input id="search" placeholder="素材を検索…">
-<button onclick="searchMaterial()">検索</button>
+<div id="scoreBoard">スコア: <span id="score">0</span></div>
+
+<div id="game"></div>
+
+<div id="controls">
+<button onclick="resetGame()">リスタート</button>
 </div>
 
-<div class="container">
+<div id="message"></div>
 
-<div class="sidebar">
-<h3>カテゴリー</h3>
-<div class="category" onclick="filter('all')">すべて</div>
-<div class="category" onclick="filter('star')">星</div>
-<div class="category" onclick="filter('flower')">花</div>
-<div class="category" onclick="filter('fantasy')">ファンタジー</div>
-<div class="category" onclick="filter('cute')">かわいい</div>
-</div>
-
-<div class="gallery" id="gallery"></div>
-
-</div>
-
-<div class="modal" id="modal">
-<div class="modal-content">
-<div class="big" id="bigIcon"></div>
-<h2 id="bigTitle"></h2>
-<button class="close" onclick="closeModal()">閉じる</button>
-</div>
-</div>
-
-<footer>
-✨ Sana Material World ✨
-</footer>
+<footer>Tap blocks to clear groups!</footer>
 
 <script>
 
-const materials=[
-{name:"キラキラ星",icon:"⭐",cat:"star"},
-{name:"流れ星",icon:"🌠",cat:"star"},
-{name:"魔法の星",icon:"✨",cat:"star"},
-{name:"ピンクの花",icon:"🌸",cat:"flower"},
-{name:"チューリップ",icon:"🌷",cat:"flower"},
-{name:"バラ",icon:"🌹",cat:"flower"},
-{name:"ユニコーン",icon:"🦄",cat:"fantasy"},
-{name:"魔法",icon:"🪄",cat:"fantasy"},
-{name:"妖精",icon:"🧚",cat:"fantasy"},
-{name:"ハート",icon:"💖",cat:"cute"},
-{name:"キャンディ",icon:"🍬",cat:"cute"},
-{name:"プレゼント",icon:"🎁",cat:"cute"}
-]
+const icons=["🍓","🍋","🍇","🍒","🍊","🫐"]
+const size=6
+let grid=[]
+let score=0
 
-let current="all"
+const game=document.getElementById("game")
+const scoreEl=document.getElementById("score")
+const message=document.getElementById("message")
 
-function render(){
-const gallery=document.getElementById("gallery")
-const search=document.getElementById("search").value
-
-gallery.innerHTML=""
-
-materials.forEach(m=>{
-
-if(current!="all" && m.cat!==current)return
-if(search && !m.name.includes(search))return
-
-const card=document.createElement("div")
-card.className="card"
-card.onclick=()=>openModal(m)
-
-card.innerHTML=`
-<div class="thumb">${m.icon}</div>
-<div class="title">${m.name}</div>
-`
-
-gallery.appendChild(card)
-
-})
+function randomIcon(){
+ return icons[Math.floor(Math.random()*icons.length)]
 }
 
-function filter(cat){
-current=cat
-render()
+function createGrid(){
+ grid=[]
+ for(let y=0;y<size;y++){
+  let row=[]
+  for(let x=0;x<size;x++){
+   row.push(randomIcon())
+  }
+  grid.push(row)
+ }
 }
 
-function searchMaterial(){
-render()
+function draw(){
+ game.innerHTML=""
+
+ for(let y=0;y<size;y++){
+  for(let x=0;x<size;x++){
+
+   const cell=document.createElement("div")
+   cell.className="cell"
+   cell.textContent=grid[y][x]
+
+   cell.onclick=()=>clickCell(x,y)
+
+   game.appendChild(cell)
+  }
+ }
 }
 
-function openModal(m){
-document.getElementById("modal").style.display="flex"
-document.getElementById("bigIcon").textContent=m.icon
+function getGroup(x,y,icon,visited){
+ const key=x+","+y
+ if(visited.has(key))return []
+ if(x<0||y<0||x>=size||y>=size)return []
+ if(grid[y][x]!==icon)return []
 
-document.getElementById("bigTitle").textContent=m.name
+ visited.add(key)
+
+ let cells=[[x,y]]
+
+ cells=cells.concat(getGroup(x+1,y,icon,visited))
+ cells=cells.concat(getGroup(x-1,y,icon,visited))
+ cells=cells.concat(getGroup(x,y+1,icon,visited))
+ cells=cells.concat(getGroup(x,y-1,icon,visited))
+
+ return cells
 }
 
-function closeModal(){
-document.getElementById("modal").style.display="none"
+function clickCell(x,y){
+ const icon=grid[y][x]
+ const group=getGroup(x,y,icon,new Set())
+
+ if(group.length<2){
+  message.textContent="2個以上つながったブロックをタップ！"
+  return
+ }
+
+ group.forEach(c=>{
+  const [gx,gy]=c
+  grid[gy][gx]=null
+ })
+
+ score+=group.length*10
+ scoreEl.textContent=score
+
+ drop()
+ refill()
+ draw()
+
+ message.textContent=""+group.length+"コンボ！"
 }
 
-render()
+function drop(){
+ for(let x=0;x<size;x++){
+  for(let y=size-1;y>=0;y--){
+
+   if(grid[y][x]==null){
+
+    for(let k=y-1;k>=0;k--){
+
+     if(grid[k][x]!=null){
+      grid[y][x]=grid[k][x]
+      grid[k][x]=null
+      break
+     }
+
+    }
+
+   }
+
+  }
+ }
+}
+
+function refill(){
+ for(let y=0;y<size;y++){
+  for(let x=0;x<size;x++){
+   if(grid[y][x]==null){
+    grid[y][x]=randomIcon()
+   }
+  }
+ }
+}
+
+function resetGame(){
+ score=0
+ scoreEl.textContent=score
+ message.textContent=""
+ createGrid()
+ draw()
+}
+
+createGrid()
+draw()
 
 </script>
 
 </body>
 </html>
+
